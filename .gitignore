@@ -1,0 +1,39 @@
+# ---------- Java ----------
+target/
+*.class
+*.jar
+*.war
+# Maven Wrapper 的 jar 必须提交，否则别人 clone 后无法构建
+!.mvn/wrapper/maven-wrapper.jar
+
+# ---------- Python ----------
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# ---------- Node ----------
+node_modules/
+dist/
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.iml
+
+# ---------- 数据与日志 ----------
+*.log
+data/
+chroma_db/
+uploads/
+
+# ---------- 本地配置（含真实密码，绝不提交）----------
+application-local.yml
+application-local.properties
+
+# ---------- 样例数据：只放程序生成的虚构 PDF，真实简历绝不提交 ----------
+samples/**/*.pdf
+
+# ---------- 本地文档（开发手册、评审报告等，不提交）----------
+docs/
