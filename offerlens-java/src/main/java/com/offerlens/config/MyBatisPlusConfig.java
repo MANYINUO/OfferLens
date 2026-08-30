@@ -1,22 +1,12 @@
 package com.offerlens.config;
 
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * MyBatis-Plus 配置
- * 目前只加分页插件，后续按需加乐观锁、数据权限等
+ * 目前为空，后续需要分页、乐观锁等插件时在此添加
  */
 @Configuration
 public class MyBatisPlusConfig {
 
-    @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
-        return interceptor;
-    }
 }
