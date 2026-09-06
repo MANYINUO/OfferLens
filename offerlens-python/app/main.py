@@ -3,14 +3,17 @@
 启动方式（在 offerlens-python 目录下）：
     .venv\\Scripts\\activate
     uvicorn app.main:app --reload --port 8000
-
-Step 0.3 只提供健康检查接口，用于验证服务能跑起来。
-后续 Step 2.x 会在这里挂载匹配、PDF 解析、面试题生成等接口。
 """
 
 from fastapi import FastAPI
+from app.routers import resume, jd, match
 
-app = FastAPI(title="OfferLens Agent")
+app = FastAPI(title="OfferLens Agent", version="0.1.0")
+
+# 注册路由
+app.include_router(resume.router)
+app.include_router(jd.router)
+app.include_router(match.router)
 
 
 @app.get("/api/health")
