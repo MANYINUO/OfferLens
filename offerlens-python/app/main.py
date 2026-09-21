@@ -6,9 +6,9 @@
 """
 
 from fastapi import FastAPI
-from app.routers import resume, jd, match, tools, agent
+from app.routers import resume, jd, match, tools, agent, funnel
 
-app = FastAPI(title="OfferLens Agent", version="0.3.0")
+app = FastAPI(title="OfferLens Agent", version="0.4.0")
 
 # 注册路由
 app.include_router(resume.router)
@@ -16,6 +16,7 @@ app.include_router(jd.router)
 app.include_router(match.router)
 app.include_router(tools.router)
 app.include_router(agent.router)
+app.include_router(funnel.router)
 
 
 @app.get("/api/health")
