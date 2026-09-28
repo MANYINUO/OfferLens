@@ -20,6 +20,21 @@ REPLIED_STATES = {"viewed", "written", "first", "second", "hr", "offer"}
 TERMINAL_STATES = {"offer", "rejected", "no_response", "abandoned"}
 
 
+def _field(app: Dict[str, Any], camel: str, snake: str = None) -> Any:
+    """读取投递记录字段。
+
+    Java 后端经 Jackson 序列化后返回的是 camelCase（jobType / matchScore /
+    appliedAt / resumeId），而本模块历史代码按 snake_case 取值，导致这些
+    字段全部读成 None，统计结果退化成「未分类 / 未知 / 数据缺失」。
+    这里两种命名都兼容，避免任一侧调整命名时再次读空。
+    """
+    if camel in app and app[camel] is not None:
+        return app[camel]
+    if snake and snake in app and app[snake] is not None:
+        return app[snake]
+    return None
+
+
 def _is_replied(app: Dict[str, Any]) -> bool:
     """判断这条投递是否收到了回复（HR 查看了简历）"""
     return app.get("status") in REPLIED_STATES
@@ -34,7 +49,7 @@ def analyze_by_job_type(applications: List[Dict[str, Any]]) -> List[Dict[str, An
     """按岗位类型统计：投递数、回复数、回复率、offer数"""
     groups = defaultdict(list)
     for app in applications:
-        job_type = app.get("job_type") or "未分类"
+        job_type = _field(app, "jobType", "job_type") or "未分类"
         groups[job_type].append(app)
 
     result = []
@@ -80,7 +95,7 @@ def analyze_by_resume_version(applications: List[Dict[str, Any]]) -> List[Dict[s
     """按简历版本统计：哪版简历效果好"""
     groups = defaultdict(list)
     for app in applications:
-        resume_id = app.get("resume_id")
+        resume_id = _field(app, "resumeId", "resume_id")
         key = f"简历版本#{resume_id}" if resume_id else "未关联简历"
         groups[key].append(app)
 
@@ -104,7 +119,7 @@ def analyze_by_time_period(applications: List[Dict[str, Any]]) -> List[Dict[str,
     """按投递月份统计：找出集体沉默的批次"""
     groups = defaultdict(list)
     for app in applications:
-        applied_at = app.get("applied_at")
+        applied_at = _field(app, "appliedAt", "applied_at")
         if applied_at:
             # 取年月，格式 "2026-08"
             month = applied_at[:7] if len(applied_at) >= 7 else applied_at
@@ -135,7 +150,8 @@ def analyze_by_match_score(applications: List[Dict[str, Any]]) -> List[Dict[str,
     result = []
     for low, high, label in ranges:
         apps = [a for a in applications
-                if a.get("match_score") is not None and low <= a["match_score"] < high]
+                if _field(a, "matchScore", "match_score") is not None
+                and low <= _field(a, "matchScore", "match_score") < high]
         total = len(apps)
         replied = sum(1 for a in apps if _is_replied(a))
         result.append({

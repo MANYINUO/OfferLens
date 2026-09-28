@@ -1,6 +1,7 @@
 """匹配度评分服务：对比简历和 JD，给出分数+缺口分析+证据链。"""
 
 from app.models import MatchResult, ResumeParseResult, JDParseResult
+from app.services.resume_parser import EmptyTextError
 from app.llm_client import llm_client
 
 
@@ -18,8 +19,15 @@ SYSTEM_PROMPT = """你是一个专业的求职匹配分析师。请对比简历�
 
 def match_resume_jd(resume: ResumeParseResult, jd: JDParseResult) -> MatchResult:
     """对比简历和 JD，给出匹配度分析"""
-    resume_text = _resume_to_text(resume)
-    jd_text = _jd_to_text(jd)
+    resume_text = _resume_to_text(resume).strip()
+    jd_text = _jd_to_text(jd).strip()
+
+    # ResumeParseResult / JDParseResult 的所有字段都有默认值，所以 {} 也能通过
+    # pydantic 校验。这里必须再挡一次，否则空简历会直接进 LLM，模型会编一份出来。
+    if not resume_text:
+        raise EmptyTextError("简历内容为空，无法评分")
+    if not jd_text:
+        raise EmptyTextError("职位描述为空，无法评分")
 
     user_prompt = f"""请对比以下简历和职位描述，输出匹配度分析 JSON：
 
