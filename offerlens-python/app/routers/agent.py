@@ -1,16 +1,24 @@
 """Agent 对话接口：运行 LangGraph 工作流，返回完整分析结果。"""
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from app.agent.graph import agent_graph
+from app.constants import MAX_TEXT_CHARS
 
 router = APIRouter(prefix="/api/agent", tags=["Agent分析"])
 
 
 class AgentRequest(BaseModel):
     user_id: int
-    resume_text: str
-    jd_text: str
+    resume_text: str = Field(min_length=1, max_length=MAX_TEXT_CHARS)
+    jd_text: str = Field(min_length=1, max_length=MAX_TEXT_CHARS)
+
+    @field_validator("resume_text", "jd_text")
+    @classmethod
+    def not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("文本不能为空")
+        return value
 
 
 class AgentResponse(BaseModel):
