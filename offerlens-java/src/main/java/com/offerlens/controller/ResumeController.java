@@ -11,10 +11,17 @@ import java.util.Map;
 
 /**
  * 简历版本管理接口
+ *
+ * content 最终写入 MySQL 的 TEXT 字段（65,535 字节）。UTF-8 中文占 3 字节，
+ * 所以这里按字符数卡在 2 万——约 60,000 字节，留出余量。
+ * 该值需与 Python 侧 constants.MAX_TEXT_CHARS、前端 textarea maxlength 保持一致。
  */
 @RestController
 @RequestMapping("/api/resumes")
 public class ResumeController {
+
+    /** 单份简历内容的字符上限 */
+    private static final int MAX_CONTENT_CHARS = 20_000;
 
     @Autowired
     private ResumeService resumeService;
@@ -25,6 +32,10 @@ public class ResumeController {
         Long userId = Long.valueOf(body.get("userId").toString());
         String versionName = (String) body.get("versionName");
         String content = (String) body.get("content");
+        String tooLong = checkContentLength(content);
+        if (tooLong != null) {
+            return Result.error(400, tooLong);
+        }
         return Result.success(resumeService.create(userId, versionName, content));
     }
 
@@ -49,6 +60,10 @@ public class ResumeController {
     public Result<Void> update(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         String versionName = (String) body.get("versionName");
         String content = (String) body.get("content");
+        String tooLong = checkContentLength(content);
+        if (tooLong != null) {
+            return Result.error(400, tooLong);
+        }
         boolean ok = resumeService.update(id, versionName, content);
         return ok ? Result.success() : Result.error("更新失败");
     }
@@ -58,5 +73,17 @@ public class ResumeController {
     public Result<Void> delete(@PathVariable Long id) {
         boolean ok = resumeService.delete(id);
         return ok ? Result.success() : Result.error("删除失败");
+    }
+
+    /** 内容超长时返回提示文案，正常返回 null */
+    private String checkContentLength(String content) {
+        if (content == null) {
+            return null;
+        }
+        if (content.length() > MAX_CONTENT_CHARS) {
+            return "简历内容 " + content.length() + " 字，超过 "
+                    + MAX_CONTENT_CHARS + " 字上限，请精简后再保存";
+        }
+        return null;
     }
 }
