@@ -1,0 +1,8 @@
+/*
+ * 样式入口
+ * 顺序：令牌 → 基础 → 组件 → 视图
+ */
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+@import './views.css';
